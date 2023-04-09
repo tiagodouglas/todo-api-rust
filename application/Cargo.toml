@@ -1,0 +1,20 @@
+[package]
+name = "application"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+domain = { path = "../domain" }
+infrastructure = {path = "../infrastructure"}
+shared = { path = "../shared" }
+serde = {version="1.0.159", features = ["derive"]}
+serde_json = "1"
+jsonwebtoken = "8.3.0"
+dotenvy = "0.15"
+chrono = "0.4.24"
+actix-web = "4.3.1"
+bcrypt = "0.14.0"
+diesel-async = { version = "0.2.1", features = ["postgres"] }
+diesel = { version = "2.0.0", features = ["postgres"] }
