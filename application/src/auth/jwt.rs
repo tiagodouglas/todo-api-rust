@@ -12,7 +12,13 @@ pub struct Claims {
     exp: usize,
 }
 
-pub fn generate_token(sub: &str) -> Result<String> {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Token {
+    pub token: String,
+    pub exp: usize,
+}
+
+pub fn generate_token(sub: &str) -> Result<Token> {
     dotenv().ok();
     let claims = Claims {
         sub: sub.to_owned(),
@@ -33,7 +39,10 @@ pub fn generate_token(sub: &str) -> Result<String> {
         Err(_) => panic!("Error generating token"),
     };
 
-    Ok(token)
+    Ok(Token {
+        token: token,
+        exp: claims.exp,
+    })
 }
 
 pub fn validate_token(token: &str) -> Result<Claims> {
