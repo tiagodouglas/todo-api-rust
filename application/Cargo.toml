@@ -18,3 +18,4 @@ actix-web = "4.3.1"
 bcrypt = "0.14.0"
 diesel-async = { version = "0.2.1", features = ["postgres"] }
 diesel = { version = "2.0.0", features = ["postgres"] }
+validator = "0.16.0"

@@ -1,5 +1,5 @@
 use super::jwt::generate_token;
-use bcrypt::{verify};
+use bcrypt::verify;
 use diesel::prelude::*;
 use domain::{
     schema::users::{self},
@@ -16,8 +16,10 @@ pub struct AuthResponse {
 
 #[derive(Deserialize)]
 pub struct AuthRequest {
-    pub email: String,
-    pub password: String,
+    #[serde(rename = "email")]
+    pub email: Option<String>,
+    #[serde(rename = "password")]
+    pub password: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -27,9 +29,19 @@ pub struct AuthError {
 }
 
 pub fn authenticate_user(auth_request: AuthRequest) -> Result<AuthResponse, AuthError> {
+    match auth_request.validate() {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    }
+
+    let email_auth = auth_request.email.unwrap();
+    let password_auth = auth_request.password.unwrap();
+
     let result = std::panic::catch_unwind(|| {
         let user = match users::table
-            .filter(users::email.eq(&auth_request.email))
+            .filter(users::email.eq(&email_auth))
             .first::<User>(&mut establish_connection())
         {
             Ok(u) => u,
@@ -44,7 +56,7 @@ pub fn authenticate_user(auth_request: AuthRequest) -> Result<AuthResponse, Auth
 
         let hashed_password = &user.hash;
 
-        let password_matches = verify(auth_request.password, hashed_password).unwrap();
+        let password_matches = verify(password_auth, hashed_password).unwrap();
 
         if !password_matches {
             return Err(AuthError {
@@ -53,7 +65,7 @@ pub fn authenticate_user(auth_request: AuthRequest) -> Result<AuthResponse, Auth
             });
         }
 
-        let sub = auth_request.email;
+        let sub = email_auth;
 
         let token = generate_token(&sub).unwrap();
 
@@ -70,5 +82,22 @@ pub fn authenticate_user(auth_request: AuthRequest) -> Result<AuthResponse, Auth
             status: 500,
         }
         .into()),
+    }
+}
+
+impl AuthRequest {
+    pub fn validate(&self) -> Result<(), AuthError> {
+        if self.email.is_none() {
+            return Err(AuthError {
+                message: "Email is required".to_owned(),
+                status: 400,
+            });
+        } else if self.password.is_none() {
+            return Err(AuthError {
+                message: "Password is required".to_owned(),
+                status: 400,
+            });
+        }
+        Ok(())
     }
 }
