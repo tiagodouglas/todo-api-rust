@@ -1,0 +1,29 @@
+version: '3'
+
+networks:
+  localdev:
+    name: localdev
+
+services:
+  todo-api-rust:
+    build: .
+    ports:
+      - "5500:5500"
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@localhost/todo_rust_db
+      JWT_SECRET: rust@api@test123
+    depends_on:
+      - db-todo
+    networks:
+      - localdev
+  db-todo:
+    image: postgres:13
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: todo_rust_db
+    networks:
+      - localdev
+   
