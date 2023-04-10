@@ -7,13 +7,8 @@ async fn create_todo_handler(todo_request: web::Json<CreateTodoRequest>) -> impl
     match create_todo(todo_request.into_inner()) {
         Ok(res) => HttpResponse::Ok().json(res),
         Err(err) => match err {
-            CreateTodoError { message, status } => {
-                if status == 500 {
-                    HttpResponse::InternalServerError().json(ErrorResponse { message })
-                } else {
-                    HttpResponse::BadRequest().json(ErrorResponse { message })
-                }
-            }
+            CreateTodoError { message, status } if status == 500 => HttpResponse::InternalServerError().json(ErrorResponse { message }),
+            CreateTodoError { message, status } => HttpResponse::BadRequest().json(ErrorResponse { message }),
         },
     }
 }
