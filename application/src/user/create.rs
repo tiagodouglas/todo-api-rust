@@ -10,8 +10,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize)]
 pub struct CreateUserRequest {
-    pub email: String,
-    pub password: String,
+    #[serde(rename = "email")]
+    pub email: Option<String>,
+    #[serde(rename = "password")]
+    pub password: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -27,10 +29,20 @@ pub struct CreateUserError {
 }
 
 pub fn create_user(user_request: CreateUserRequest) -> Result<CreateUserResponse, CreateUserError> {
+    match user_request.validate() {
+        Ok(_) => {}
+        Err(err) => {
+            return Err(err);
+        }
+    }
+
+    let email_auth = user_request.email.unwrap();
+    let password_auth = user_request.password.unwrap();
+
     let result = std::panic::catch_unwind(|| {
         let user_exists = match users::table
             .select(users::id)
-            .filter(email.eq(&user_request.email))
+            .filter(email.eq(&email_auth))
             .first::<i32>(&mut establish_connection())
         {
             Ok(_) => true,
@@ -45,13 +57,13 @@ pub fn create_user(user_request: CreateUserRequest) -> Result<CreateUserResponse
             });
         }
 
-        let hashed_password = match hash(user_request.password, DEFAULT_COST) {
+        let hashed_password = match hash(password_auth, DEFAULT_COST) {
             Ok(h) => h,
             Err(_) => panic!("Error generating hash"),
         };
 
         let user = NewUser {
-            email: user_request.email,
+            email: email_auth,
             hash: hashed_password,
             datecreated: Utc::now(),
         };
@@ -83,5 +95,22 @@ pub fn create_user(user_request: CreateUserRequest) -> Result<CreateUserResponse
             status: 500,
         }
         .into()),
+    }
+}
+
+impl CreateUserRequest {
+    pub fn validate(&self) -> Result<(), CreateUserError> {
+        if self.email.is_none() {
+            return Err(CreateUserError {
+                message: "Email is required".to_owned(),
+                status: 400,
+            });
+        } else if self.password.is_none() {
+            return Err(CreateUserError {
+                message: "Password is required".to_owned(),
+                status: 400,
+            });
+        }
+        Ok(())
     }
 }

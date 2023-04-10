@@ -19,5 +19,4 @@ pub struct NewUser {
     pub email: String,
     pub hash: String,
     pub datecreated: DateTime<Utc>,
-    // pub dateupdated: Option<DateTime<Utc>>,
 }
