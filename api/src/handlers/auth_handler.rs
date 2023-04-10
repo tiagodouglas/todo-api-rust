@@ -10,7 +10,7 @@ async fn authenticate_handler(auth_request: web::Json<AuthRequest>) -> impl Resp
             AuthError { message, status } if status == 500 => {
                 HttpResponse::InternalServerError().json(ErrorResponse { message })
             }
-            AuthError { message, status } => {
+            AuthError { message, status: _ } => {
                 HttpResponse::BadRequest().json(ErrorResponse { message })
             }
         },
