@@ -76,7 +76,6 @@ pub fn create_todo(todo_request: CreateTodoRequest) -> Result<CreateTodoResponse
                     id: t.id,
                     description: t.description,
                     completed: t.completed
-                 
                 };
 
                 return Ok(response);
