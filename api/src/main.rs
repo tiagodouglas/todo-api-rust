@@ -2,7 +2,7 @@ use std::env;
 
 use actix_web::dev::ServiceRequest;
 use actix_web::middleware::Logger;
-use actix_web::{App, Error, HttpServer};
+use actix_web::{App, Error, HttpServer, web};
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -27,9 +27,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::new("request: %r status: %s"))
             .service(authenticate_handler)
-            .wrap(auth)
             .service(create_user_handler)
-            .service(create_todo_handler)
+            .service(web::scope("/todo").wrap(auth.to_owned()).service(create_todo_handler))
     })
     .bind(("127.0.0.1", port.parse().unwrap()))?
     .run()
